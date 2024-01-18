@@ -1,13 +1,12 @@
 use image::imageops::{resize, FilterType};
 use image::io::Reader as ImageReader;
-use ndarray::{s, Array2, Array4};
 
 use std::error::Error;
 use std::fs;
 
-use rten::Model;
+use rten::{FloatOperators, Model, Operators};
 use rten_tensor::prelude::*;
-use rten_tensor::{NdTensor, NdTensorView};
+use rten_tensor::NdTensor;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let mut args = std::env::args();
@@ -28,46 +27,40 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Read pixels into NCHW tensor and apply standard ImageNet normalization.
     let imagenet_mean = [0.485, 0.456, 0.406];
     let imagenet_std_dev = [0.229, 0.224, 0.225];
-    let nchw_array = Array4::from_shape_fn(
-        [1, 3, input_height as usize, input_width as usize],
-        |(_n, c, y, x)| {
-            let value = img.get_pixel(x as u32, y as u32)[c] as f32 / 255.0;
-            (value - imagenet_mean[c]) / imagenet_std_dev[c]
-        },
-    );
-    let nchw_tensor: NdTensorView<f32, 4> = nchw_array
-        .as_slice()
-        .map(|slice| {
-            let shape: [usize; 4] = nchw_array.shape().try_into().unwrap();
-            NdTensorView::from_slice(slice, shape, None).expect("incorrect slice length")
-        })
-        .expect("failed to convert ndarray");
+    let mut nchw_tensor = NdTensor::zeros([1, 3, input_height as usize, input_width as usize]);
+    for y in 0..nchw_tensor.size(2) {
+        for x in 0..nchw_tensor.size(3) {
+            for c in 0..nchw_tensor.size(1) {
+                let value = img.get_pixel(x as u32, y as u32)[c] as f32 / 255.0;
+                let value = (value - imagenet_mean[c]) / imagenet_std_dev[c];
+                nchw_tensor[[0, c, y, x]] = value;
+            }
+        }
+    }
 
     // Run model inference.
     let output = model
         .run_one(nchw_tensor.as_dyn().into(), None)
         .map_err(|err| format!("model run failed {:?}", err))?;
     let output: NdTensor<f32, 2> = output.try_into()?; // (batch, cls)
+    let (topk_scores, topk_cls) =
+        output
+            .softmax(1)?
+            .topk(5, Some(1), true /* largest */, true /* sorted */)?;
 
     // Convert output back into an ndarray array and find the best score.
     // Note the scores are raw and not directly usable as probabilities. To get
     // probabilities you'd need to apply softmax to the output. See examples
     // in the RTen repo for how to do that.
-    let logits_array = Array2::from_shape_vec(output.shape(), output.into_data())?;
-    let (top_cls, top_score) = logits_array
-        .slice(s![0, ..])
-        .iter()
-        .copied()
-        .enumerate()
-        .max_by(|(_cls_a, score_a), (_cls_b, score_b)| score_a.total_cmp(score_b))
-        .unwrap();
-
     let labels_json = fs::read_to_string("imagenet-simple-labels.json")?;
-    let labels: Vec<String> =
-        serde_json::from_str(&labels_json)?;
-    let top_label = labels.get(top_cls).map(|s| s.as_str()).unwrap_or("unknown");
-
-    println!("Top class: {} (score: {})", top_label, top_score);
+    let labels: Vec<String> = serde_json::from_str(&labels_json)?;
+    for (score, &cls) in topk_scores.iter().zip(topk_cls.iter()) {
+        let label = labels
+            .get(cls as usize)
+            .map(|s| s.as_str())
+            .unwrap_or("unknown");
+        println!("Class {} score {}", label, score);
+    }
 
     Ok(())
 }
