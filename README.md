@@ -8,7 +8,7 @@ perform simple ML inference using [RTen](https://github.com/robertknight/rten).
 - [ndarray](https://docs.rs/ndarray/latest/ndarray/) is used to prepare the
   input and post-process the output. You can use RTen's own tensor types for
   this purpose, but many users may be more familiar with ndarray.
-- serde_json is used to read label data
+- [serde_json](https://github.com/serde-rs/json) is used to read label data
 
 ## Usage
 
