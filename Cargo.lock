@@ -371,9 +371,9 @@ dependencies = [
 
 [[package]]
 name = "rten"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0fec774197b06ec26b0ffdf85d6e9012a01b1fc7b3535dec666584545df06973"
+checksum = "602e8ac97ee394ef892bf6f0ef8ea87faa79848a67b320eb6d74d10ad462e033"
 dependencies = [
  "flatbuffers",
  "libm",
@@ -397,18 +397,18 @@ dependencies = [
 
 [[package]]
 name = "rten-tensor"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b00a55ca04d3219957737f87a9fc3f6eee6770e1f1643c2094c032c90c43f0d2"
+checksum = "b994b2c4597280249d6beb99fe01dd0adf06b0f002c2049a07708f09aed55c3a"
 dependencies = [
  "smallvec",
 ]
 
 [[package]]
 name = "rten-vecmath"
-version = "0.1.1"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fdf88099bfb2abd791a65fbb2d4e6415630d307a54dcb3e47d52758f895d1a0c"
+checksum = "7217654557cc3983b10c45649fb955ced00b970349caa5cfcd7328316c91967d"
 
 [[package]]
 name = "rustc_version"
