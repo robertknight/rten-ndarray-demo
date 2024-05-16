@@ -15,9 +15,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     let model_path = args.next().ok_or("missing `model` arg")?;
     let image_path = args.next().ok_or("missing `image` arg")?;
 
-    let model_bytes = fs::read(model_path)?;
     let model =
-        Model::load(&model_bytes).map_err(|err| format!("error loading model: {:?}", err))?;
+        Model::load_file(model_path).map_err(|err| format!("error loading model: {:?}", err))?;
 
     // Load image and resize to dimensions expected by model.
     let (input_height, input_width) = match model.input_shape(0).unwrap().as_slice() {
