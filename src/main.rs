@@ -3,7 +3,7 @@ use std::fs;
 
 use image::imageops::{resize, FilterType};
 use image::io::Reader as ImageReader;
-use ndarray::{s, Array2, Array4, Dimension};
+use ndarray::{s, Array2, Array4};
 use rten::Model;
 use rten_tensor::prelude::*;
 use rten_tensor::{NdTensor, NdTensorView};
@@ -40,7 +40,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     });
     let nchw_tensor: NdTensorView<f32, 4> = nchw_array
         .as_slice()
-        .map(|slice| NdTensorView::from_data(nchw_array.raw_dim().into_pattern().into(), slice))
+        .map(|slice| NdTensorView::from_data(nchw_array.dim().into(), slice))
         .expect("failed to convert ndarray");
 
     // Run model inference.
